@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cronômetro</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: white;
+            color: black;
+        }
+        .timer {
+            font-size: 3rem;
+            margin: 20px;
+            padding: 20px;
+            border: 2px solid black;
+            display: inline-block;
+            background-color: green;
+            color: white;
+        }
+        .controls button {
+            font-size: 1.5rem;
+            margin: 5px;
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cronômetro</h1>
+    <div id="timer" class="timer">00:00:00</div>
+    <div id="overtime" class="timer" style="display:none;">00:00:00</div>
+    <div class="controls">
+        <button onclick="startTimer(10)">10</button>
+        <button onclick="startTimer(15)">15</button>
+        <button onclick="startTimer(30)">30</button>
+        <button onclick="startTimer(45)">45</button>
+        <button onclick="pauseTimer()">||</button>
+        <button onclick="resetTimer()">X</button>
+    </div>
+    <script>
+        let timerInterval;
+        let overtimeInterval;
+        let remainingTime = 0;
+        let elapsedTime = 0;
+        let isPaused = false;
+        const timerElement = document.getElementById('timer');
+        const overtimeElement = document.getElementById('overtime');
+
+        function startTimer(minutes) {
+            clearInterval(timerInterval);
+            clearInterval(overtimeInterval);
+            resetColors();
+            isPaused = false;
+            remainingTime = minutes * 60;
+            elapsedTime = 0;
+            overtimeElement.style.display = 'none';
+            updateTimerDisplay(remainingTime, timerElement);
+            timerInterval = setInterval(() => {
+                if (!isPaused) {
+                    remainingTime--;
+                    elapsedTime++;
+
+                    if (remainingTime >= 0) {
+                        updateTimerDisplay(remainingTime, timerElement);
+                        updateColors(minutes, elapsedTime);
+                        document.title = formatTime(remainingTime);
+                    } else {
+                        clearInterval(timerInterval);
+                        timerElement.innerText = 'O TEMPO ACABOU';
+                        timerElement.style.backgroundColor = 'red';
+                        overtimeElement.style.display = 'inline-block';
+                        overtimeInterval = setInterval(() => {
+                            elapsedTime++;
+                            updateTimerDisplay(elapsedTime, overtimeElement);
+                        }, 1000);
+                    }
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            isPaused = !isPaused;
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            clearInterval(overtimeInterval);
+            isPaused = false;
+            remainingTime = 0;
+            elapsedTime = 0;
+            resetColors();
+            timerElement.innerText = '00:00:00';
+            overtimeElement.innerText = '00:00:00';
+            overtimeElement.style.display = 'none';
+            document.title = 'Cronômetro';
+        }
+
+        function updateTimerDisplay(seconds, element) {
+            element.innerText = formatTime(seconds);
+        }
+
+        function formatTime(seconds) {
+            const hrs = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateColors(totalMinutes, elapsedSeconds) {
+            const totalSeconds = totalMinutes * 60;
+            const thresholds = {
+                green: 0,
+                yellow: totalSeconds * 0.3,
+                orange: totalSeconds * 0.6,
+                red: totalSeconds * 0.9
+            };
+
+            if (elapsedSeconds >= thresholds.red) {
+                timerElement.style.backgroundColor = elapsedSeconds % 2 === 0 ? 'red' : 'white';
+                timerElement.style.color = elapsedSeconds % 2 === 0 ? 'white' : 'red';
+            } else if (elapsedSeconds >= thresholds.orange) {
+                timerElement.style.backgroundColor = 'orange';
+            } else if (elapsedSeconds >= thresholds.yellow) {
+                timerElement.style.backgroundColor = 'yellow';
+                timerElement.style.color = 'black';
+            } else {
+                timerElement.style.backgroundColor = 'green';
+                timerElement.style.color = 'white';
+            }
+        }
+
+        function resetColors() {
+            timerElement.style.backgroundColor = 'green';
+            timerElement.style.color = 'white';
+        }
+    </script>
+</body>
+</html>
